@@ -1,0 +1,22 @@
+#coding:utf-8
+import os
+#数据库连接参数
+DATABASE_PARAM = {
+    "host":"120.27.162.0",
+    "port":"3306",
+    "username":"root",
+    "password":"gdroot",
+    "databaseName":["gaodudata",
+                    "gaodu"]
+}
+FILE_URL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+#测试地址
+BASE_URL = r"http://testsh.loulifang.com.cn"
+#测试数据的url
+TEST_DATA = FILE_URL+r"\HiZhuAPP\testData\postTestData.csv"
+
+IMAGE_DATA = {'jpg':FILE_URL+r'\HiZhuAPP\testData\TestImage\2.jpg',
+              'jpeg':FILE_URL+r'\HiZhuAPP\testData\TestImage\3.jpeg',
+              'png':FILE_URL+r'\HiZhuAPP\testData\TestImage\4.png'}
+
+

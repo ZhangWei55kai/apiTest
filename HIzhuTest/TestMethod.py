@@ -1,0 +1,481 @@
+#coding:utf-8
+import unittest,random,HTMLTestRunner
+from publicApi.HZAppPublicAPI import HZAppAPI
+from MysqlDML.postValidData import GetTestData
+from testData import testData,readCsv
+from ApiAction import postAllAction
+from utils.logUtils import logger
+from config import FILE_URL,UNIMAGE_DATA
+
+
+
+class POSTTest(unittest.TestCase):
+    def setUp(self):
+        self.mobile = '15197029715'
+        self.post = HZAppAPI(self.mobile)
+        self.UserId = GetTestData(self.mobile).UserId
+        self.anotherMobile = '13974030833'
+
+    def test_postList200(self):
+        postList = self.post.postList({}).status_code
+        logger.info('----------------帖子列表HTTP状态码---------------')
+        logger.info('状态码为：%s' %str(postList))
+        self.assertEquals(postList,200,'接口异常')
+
+    def test_createPost200(self):
+        createPost = self.post.createPost({}).status_code
+        logger.info('----------------创建帖子HTTP状态码---------------')
+        logger.info('状态码为：%s' %str(createPost))
+        self.assertEquals(createPost, 200, '接口异常')
+
+    def test_postDetail200(self):
+        postDetail = self.post.postDetail({}).status_code
+        logger.info('----------------帖子详情HTTP状态码---------------')
+        logger.info('状态码为：%s' %str(postDetail))
+        self.assertEquals(postDetail, 200, '接口异常')
+
+    def test_postReplayList200(self):
+        postReplayList = self.post.postReplayList({}).status_code
+        logger.info('----------------获取帖子回复列表HTTP状态码---------------')
+        logger.info('状态码为：%s' % str(postReplayList))
+        self.assertEquals(postReplayList, 200, '接口异常')
+
+    def test_reportMainPost200(self):
+        reportMainPost = self.post.reportMainPost({}).status_code
+        logger.info('----------------举报主贴HTTP状态码---------------')
+        logger.info('状态码为：%s' % str(reportMainPost))
+        self.assertEquals(reportMainPost, 200, '接口异常')
+
+    def test_reportReplayPost200(self):
+        reportReplayPost = self.post.reportReplayPost({}).status_code
+        logger.info('----------------举报回复的帖子HTTP状态码---------------')
+        logger.info('状态码为：%s' % str(reportReplayPost))
+        self.assertEquals(reportReplayPost, 200, '接口异常')
+
+    def test_myReplaylist200(self):
+        myReplaylist = self.post.myReplaylist({}).status_code
+        logger.info('----------------别人回复我的帖子列表HTTP状态码---------------')
+        logger.info('状态码为：%s' % str(myReplaylist))
+        self.assertEquals(myReplaylist, 200, '接口异常')
+
+    def test_postReplay200(self):
+        postReplay = self.post.postReplay({}).status_code
+        logger.info('----------------帖子回复HTTP状态码---------------')
+        logger.info('状态码为：%s' % str(postReplay))
+        self.assertEquals(postReplay, 200, '接口异常')
+
+    def test_customerInfo200(self):
+        customerInfo = self.post.customerInfo({}).status_code
+        logger.info('----------------获取用户信息HTTP状态码---------------')
+        logger.info('状态码为：%s' % str(customerInfo))
+        self.assertEquals(customerInfo, 200, '接口异常')
+
+    def test_messageImgUpload200(self):
+        messageImgUpload = self.post.messageImgUpload({}).status_code
+        logger.info('----------------话题图片上传HTTP状态码---------------')
+        logger.info('状态码为：%s' % str(messageImgUpload))
+        self.assertEquals(messageImgUpload, 200, '接口异常')
+
+    def test_likeList200(self):
+        likeList = self.post.likeList({}).status_code
+        logger.info('----------------话题图片上传HTTP状态码---------------')
+        logger.info('状态码为：%s' % str(likeList))
+        self.assertEquals(likeList, 200, '接口异常')
+
+    def test_cancelLike200(self):
+        cancelLike = self.post.cancelLike({}).status_code
+        logger.info('----------------取消|收藏帖子HTTP状态码---------------')
+        logger.info('状态码为：%s' % str(cancelLike))
+        self.assertEquals(cancelLike, 200, '接口异常')
+
+    def test_manyDeletePost200(self):
+        manyDeletePost = self.post.manyDeletePost({}).status_code
+        logger.info('----------------批量删除帖子HTTP状态码---------------')
+        logger.info('状态码为：%s' % str(manyDeletePost))
+        self.assertEquals(manyDeletePost, 200, '接口异常')
+
+    def test_singelDeletePost200(self):
+        singelDelete = self.post.singelDeletePost({}).status_code
+        logger.info('----------------单个删除帖子HTTP状态码---------------')
+        logger.info('状态码为：%s' % str(singelDelete))
+        self.assertEquals(singelDelete, 200, '接口异常')
+
+    def test_postAuthority200(self):
+        manyDeletePost = self.post.postAuthority().status_code
+        logger.info('----------------权限获取HTTP状态码---------------')
+        logger.info('状态码为：%s' % str(manyDeletePost))
+        self.assertEquals(manyDeletePost, 200, '接口异常')
+
+    def test_postListData(self):
+        postList = self.post.postList({
+                                    "time": 0,
+                                    "limit": 1,
+                                    "sort": -1,
+                                    "is_main": 1
+                                })
+        logger.info('----------------请求帖子列表HTTP状态码---------------')
+        logger.info(u'正在请求帖子列表，结果为：%s' % postList.text)
+        self.assertEquals(postList.json()['status'],'200','列表获取失败')
+
+    def test_postValid(self):
+        #先清除数据
+        deleteResult = postAllAction.DeleteAllPost(self.mobile)
+        if deleteResult:
+            createPost = self.post.createPost(readCsv.getPostData(1))
+            self.assertEquals(createPost.json()['status'],'200','创建失败')
+        else:
+            return 'error'
+
+    def test_noAuth(self):
+        another = HZAppAPI('15216627457')
+        postResult = another.createPost(readCsv.getPostData(1))
+        print postResult.text
+        self.assertEquals(postResult.json()['message'],u"您没有发帖的权限。",'没有权限的仍然可以发帖')
+
+    def test_createHasHouse(self):
+        deleteResult = postAllAction.DeleteAllPost(self.mobile)
+        if deleteResult:
+            postData = self.post.createPost(readCsv.getPostData(2))
+            print postData.text
+            self.assertEquals(postData.json()['status'],'200','创建有房的帖子失败')
+        else:
+            self.assertEquals(False,True,'删除房源失败')
+
+    def test_createNoHouse(self):
+        deleteResult = postAllAction.DeleteAllPost(self.mobile)
+        if deleteResult:
+            postData = self.post.createPost(readCsv.getPostData(1))
+            self.assertEquals(postData.json()['status'],'200','创建无房的帖子失败')
+        else:
+            self.assertEquals(False,True,'删除房源失败')
+
+    def test_onlyCreate3(self):
+        deleteResult = postAllAction.DeleteAllPost(self.mobile)
+        if deleteResult:
+            for i in range(1,5):
+                self.post.createPost(readCsv.getPostData(i))
+                if i == 4:
+                    postData = self.post.createPost(readCsv.getPostData(i))
+                    print postData.text
+            self.assertEquals(postData.json()['message'], u"该城市下最多发布3个帖子",'创建了超过3条帖子数')
+        else:
+            self.assertEquals(False,True,'删除房源失败')
+
+    def test_createVsDetail(self):
+        deleteResult = postAllAction.DeleteAllPost(self.mobile)
+        if deleteResult:
+            createParam = readCsv.getPostData(2)
+            createPostid = postAllAction.createPostAndReturn(self,createParam)
+            postData = self.post.postDetail(testData.getPostId(createPostid))
+            compareResult = postAllAction.compareJSON(createParam,postData.json())
+            self.assertEquals(compareResult,True,'创建时和详情中的数据不一致')
+
+    def test_detailVsDatabase(self):
+        deleteResult = postAllAction.DeleteAllPost(self.mobile)
+        if deleteResult:
+            createParam = readCsv.getPostData(3)
+            createPostid = postAllAction.createPostAndReturn(self,createParam)
+            detailData = self.post.postDetail(testData.getPostId(createPostid))
+            db = GetTestData(self.mobile)
+            dbResult = db.getPostDetailInfo(createParam['title'].decode('utf-8'))
+            dbTest = postAllAction.compareDataBase(dbResult,detailData.json()['data'])
+            self.assertEquals(dbTest,True,'创建时的数据和房源详情不一致')
+
+
+    def test_replyDataValid(self):
+        deleteResult = postAllAction.DeleteAllPost(self.mobile)
+        if deleteResult:
+            createParam = readCsv.getPostData(3)
+            createPostid = postAllAction.createPostAndReturn(self,createParam)
+            replyData = self.post.postReplayList(testData.getReplyListData(createPostid))
+            self.assertEquals(replyData.json()['status'],'200','帖子回复列表status非200')
+
+    def test_replyDataVsReply(self):
+        deleteResult = postAllAction.DeleteAllPost(self.mobile)
+        if deleteResult:
+            createParam = readCsv.getPostData(3)
+            createPostid = postAllAction.createPostAndReturn(self,createParam)
+            replyData = testData.getReplyData(createPostid,self.UserId)
+            reply = self.post.postReplay(replyData)
+            self.assertEquals(reply.json()['status'],'200','回复失败')
+            replyData = self.post.postReplayList(testData.getReplyListData(createPostid))
+            self.assertEquals(len(replyData.json()['data']),1,'帖子回复获取数据与回复数不一致')
+
+
+    def test_reportValid(self):
+        postData = postAllAction.deleteAndCreatePost(self.mobile, 3)
+        if postData:
+            self.assertEquals(postData[0].json()['status'], '200', '创建帖子失败')
+            createPostid = postData[0].json()['data']['post_id']
+            reportResult = self.post.reportMainPost(testData.getReportMainData(createPostid))
+            logger.info("测试结果——————————————————————————:%s"%reportResult.text)
+            self.assertEquals(reportResult.json()['status'],'200','举报帖子返回非200')
+
+    def test_reportDataVsDatabase(self):
+        postData = postAllAction.deleteAndCreatePost(self.mobile,3)
+        if postData:
+            self.assertEquals(postData[0].json()['status'], '200', '创建帖子失败')
+            createPostid = postData[0].json()['data']['post_id']
+            reportParam = testData.getReportMainData(createPostid)
+            reportResult = self.post.reportMainPost(reportParam)
+            logger.info("举报帖子测试结果——————————————————————————:%s" % reportResult.text)
+            self.assertEquals(reportResult.json()['status'], '200', '举报帖子返回非200')
+            checkResult = postAllAction.checkReportDatabase(reportParam['content'],self.mobile,createPostid)
+            self.assertEquals(checkResult,True,'举报的内容无法在后台查询到')
+
+    def test_duplicateReport(self):
+        postData = postAllAction.deleteAndCreatePost(self.mobile, 3)
+        if postData:
+            self.assertEquals(postData[0].json()['status'], '200', '创建帖子失败')
+            createPostid = postData[0].json()['data']['post_id']
+            reportParam = testData.getReportMainData(createPostid)
+            reportResult = self.post.reportMainPost(reportParam)
+            logger.info("举报帖子测试结果——————————————————————————:%s" % reportResult.text)
+            self.assertEquals(reportResult.json()['status'], '200', '举报帖子返回非200')
+            reportResult1 = self.post.reportMainPost(reportParam)
+            self.assertEquals(reportResult1.json()['status'],'202','重复举报失败')
+
+    def test_reportReply(self):
+        postData = postAllAction.deleteAndCreatePost(self.mobile, 3)
+        if postData:
+            self.assertEquals(postData[0].json()['status'], '200', '创建帖子失败')
+            createPostid = postData[0].json()['data']['post_id']
+            replyData = testData.getReplyData(createPostid,self.UserId)
+            reply = self.post.postReplay(replyData)
+            self.assertEquals(reply.json()['status'], '200', '回复失败')
+            reportReply = self.post.reportReplayPost(testData.getReportReplyData(reply.json()['data']['reply_id']))
+            self.assertEquals(reportReply.json()['status'],'200','举报回复失败')
+
+    def test_reportReplyDataVsDatabase(self):
+        postData = postAllAction.deleteAndCreatePost(self.mobile, 3)
+        if postData:
+            #创建完帖子
+            self.assertEquals(postData[0].json()['status'], '200', '创建帖子失败')
+            createPostid = postData[0].json()['data']['post_id']
+            #获取回复数据
+            replyData = testData.getReplyData(createPostid,self.UserId)
+            #回复帖子
+            reply = self.post.postReplay(replyData)
+            self.assertEquals(reply.json()['status'], '200', '回复失败')
+            replyId = reply.json()['data']['reply_id']
+            #获取举报帖子参数
+            reportReplyData = testData.getReportReplyData(replyId)
+            #举报帖子
+            reportReply = self.post.reportReplayPost(reportReplyData)
+            self.assertEquals(reportReply.json()['status'], '200', '举报回复失败')
+            #检查举报的内容能否在数据库中查询得到
+            checkResult = postAllAction.checkReportDatabase(reportReplyData['content'],self.mobile,replyId)
+            self.assertEquals(checkResult,True,'举报回复的内容无法在后台查询到')
+
+    def test_duplicateReportReply(self):
+        postData = postAllAction.deleteAndCreatePost(self.mobile, 3)
+        if postData:
+            self.assertEquals(postData[0].json()['status'], '200', '创建帖子失败')
+            createPostid = postData[0].json()['data']['post_id']
+            replyData = testData.getReplyData(createPostid,self.UserId)
+            reply = self.post.postReplay(replyData)
+            self.assertEquals(reply.json()['status'], '200', '回复失败')
+            replyId = reply.json()['data']['reply_id']
+            reportReplyData = testData.getReportReplyData(replyId)
+            reportReply = self.post.reportReplayPost(reportReplyData)
+            self.assertEquals(reportReply.json()['status'], '200', '举报回复失败')
+            reportReply1 = self.post.reportReplayPost(reportReplyData)
+            self.assertEquals(reportReply1.json()['status'], '202', '重复举报回复的可以成功')
+
+    #正常回复测试点，回复主贴测试点
+    def test_myReplyValid(self):
+        postData = postAllAction.deleteAndCreatePost(self.mobile, 3)
+        if postData:
+            self.assertEquals(postData[0].json()['status'], '200', '创建帖子失败')
+            createPostid = postData[0].json()['data']['post_id']
+            replyData = testData.getReplyData(createPostid,self.UserId)
+            replyResult = postAllAction.anotherReply(replyData,'13974030833')
+            self.assertEquals(replyResult.json()['status'],'200','回复失败')
+            getReplyDetail = self.post.myReplaylist({"time":0,"limit":100,"sort":-1})
+            self.assertEquals(getReplyDetail.json()['status'],'200','获取回复数据成功')
+
+    def test_replyParent(self):
+        postData = postAllAction.deleteAndCreatePost(self.mobile, 3)
+        if postData:
+            self.assertEquals(postData[0].json()['status'], '200', '创建帖子失败')
+            createPostid = postData[0].json()['data']['post_id']
+            replyData = testData.getReplyData(createPostid,self.UserId)
+            replyResult = postAllAction.anotherReply(replyData, self.anotherMobile)
+            self.assertEquals(replyResult.json()['status'],'200','回复帖子失败')
+            getReply_id = replyResult.json()['data']['reply_id']
+            anotherUserid = GetTestData(self.anotherMobile).UserId
+            anReplyData = testData.getReplyData(createPostid,anotherUserid,getReply_id)
+            anotherReply = postAllAction.anotherReply(anReplyData, self.anotherMobile)
+            self.assertEquals(anotherReply.json()['status'],'200','回复回复的操作失败')
+
+    def test_privateReply(self):
+        postData = postAllAction.deleteAndCreatePost(self.mobile, 3)
+        if postData:
+            self.assertEquals(postData[0].json()['status'], '200', '创建帖子失败')
+            createPostid = postData[0].json()['data']['post_id']
+            replyData = testData.getReplyData(createPostid, self.UserId,is_private=1)
+            replyResult = postAllAction.anotherReply(replyData, self.anotherMobile)
+            self.assertEquals(replyResult.json()['status'],'200','回复帖子失败')
+            return createPostid
+
+    def test_privateReplyView(self):
+        postId = self.test_privateReply()
+        post = HZAppAPI('13564195326')
+        replyListData = testData.getReplyListData(postId)
+        viewResult = post.postReplayList(replyListData)
+        self.assertEquals(viewResult.json()['status'],'200','获取回复列表成功')
+        customerId = GetTestData(self.anotherMobile).UserId
+        result = postAllAction.analysisReplyResult(viewResult.json(),customerId)
+        self.assertEquals(result,True,'私密回复设置失败')
+
+
+    def test_getRenterInfo(self):
+        RenterId = GetTestData(self.mobile).UserId
+        post = self.post.customerInfo({"customer_id":RenterId})
+        self.assertEquals(post.json()['status'],'200','租客信息接口返回非200')
+
+    def test_getRenterByErroNum(self):
+        custormer_id = 'JDLKSJAKDJSLKJDLKHAHFKSAKJDSAK'
+        post = self.post.customerInfo({"customer_id": custormer_id})
+        self.assertEquals(post.json()['status'], '202', '错误的ID返回数据异常')
+
+    def test_imgUpload(self):
+        imageSet = testData.imageUrl
+        for imgType in imageSet:
+            imageUp = HZAppAPI.getImageData(imageSet[imgType])
+            uploadData = testData.getImageData(imageUp)
+            post = self.post.messageImgUpload(uploadData)
+            self.assertEquals(post.json()['status'],'200','%s类型的图片上传失败'%imgType)
+
+    def test_unImageUpload(self):
+        imageUrl = UNIMAGE_DATA
+        imageUp = HZAppAPI.getImageData(imageUrl)
+        uploadData = testData.getImageData(imageUp)
+        post = self.post.messageImgUpload(uploadData)
+        self.assertEquals(post.json()['status'], '201', '非图片类型的文件上传成功')
+
+    def test_likeList(self):
+        like = self.post.likeList({"pageno":1,"limit":100,"sort":-1})
+        self.assertEquals(like.json()['status'],'200','获取收藏列表失败')
+        return like
+
+    def test_likeAndViewList(self):
+        postData = postAllAction.deleteAndCreatePost(self.mobile, 3)
+        if postData:
+            self.assertEquals(postData[0].json()['status'], '200', '创建帖子失败')
+            createPostid = postData[0].json()['data']['post_id']
+            likeFirLen = len(self.test_likeList().json()['data'])
+            likeResult = self.post.cancelLike({'ids':[createPostid,],'is_collect':1})
+            self.assertEquals(likeResult.json()['status'],'200','帖子收藏失败')
+            likeId = likeResult.json()['data']['like_ids']
+            likeSecLen = len(self.test_likeList().json()['data'])
+            print likeFirLen,likeSecLen
+            self.assertEquals(likeFirLen+1,likeSecLen,'新增收藏数据，在列表显示失败')
+            return [likeId,likeSecLen]
+
+    def test_cancelLikeAndViewList(self):
+        likeSet = self.test_likeAndViewList()
+        post = self.post.cancelLike({"ids":likeSet[0],"is_collect":0})
+        self.assertEquals(post.json()['status'],'200','取消收藏失败')
+        cancelLikeLen = len(self.test_likeList().json()['data'])
+        self.assertEquals(cancelLikeLen,likeSet[1]-1,'取消收藏的数据，在列表内显示失败')
+
+
+    def test_anotherLike(self):
+        postData = postAllAction.deleteAndCreatePost(self.mobile, 3)
+        if postData:
+            self.assertEquals(postData[0].json()['status'], '200', '创建帖子失败')
+            createPostid = postData[0].json()['data']['post_id']
+            post = HZAppAPI(self.anotherMobile)
+            likeResult = post.cancelLike({'ids':[createPostid,],'is_collect':1})
+            self.assertEquals(likeResult.json()['status'],'200','他人收藏帖子失败')
+            return likeResult
+
+    def test_anotherCancelLike(self):
+        likeId = self.test_anotherLike().json()['data']['like_ids']
+        cancelResult = self.post.cancelLike({"ids":likeId,"is_collect":0})
+        self.assertEquals(cancelResult.json()['status'],'200','他人取消收藏失败')
+
+    def test_deletePost(self):
+        deleteResult = postAllAction.DeleteAllPost(self.mobile)
+        self.assertEquals(deleteResult,True,'删除接口失败')
+
+    def test_deleteByNotOwner(self):
+        deleteResult = postAllAction.DeleteAllPost(self.mobile)
+        self.assertEquals(deleteResult,True,'删除失败')
+        createParam = readCsv.getPostData(3)
+        createPost = self.post.createPost(createParam)
+        self.assertEquals(createPost.json()['status'], '200', '创建帖子失败')
+        another = HZAppAPI(self.anotherMobile)
+        createId = createPost.json()['data']['post_id']
+        anotherDelete = another.singelDeletePost({"post_id":createId})
+        self.assertEquals(anotherDelete.json()['status'],'204','可以删除其他人的帖子')
+
+    def tearDown(self):
+        pass
+
+if __name__ == "__main__":
+    # unittest.main()
+    import os
+    # filePath = os.path.join(FILE_URL.encode('utf-8'),'workspace','testReport','HTMLTestReport.html')
+    filePath1 = r'D:\TestCode\HIzhuTest\testReport\HTMLTestReport.html'
+    fp = open(filePath1, 'wb')
+    runner = HTMLTestRunner.HTMLTestRunner(
+        stream=fp,
+        title=u'嗨住帮APP找室友模块测试',
+        description=u'该测试测试范围涵盖：所有接口',
+        tester=u"LeslieZhang"
+    )
+    testList = [
+        'test_postList200',
+        'test_createPost200',
+        'test_postDetail200',
+        'test_postReplayList200',
+        'test_reportMainPost200',
+        'test_reportReplayPost200',
+        'test_myReplaylist200',
+        'test_postReplay200',
+        'test_customerInfo200',
+        'test_messageImgUpload200',
+        'test_likeList200',
+        'test_cancelLike200',
+        'test_manyDeletePost200',
+        'test_singelDeletePost200',
+        'test_postAuthority200',
+        'test_postListData',
+        'test_noAuth',
+        'test_postValid',
+        'test_createHasHouse',
+        'test_createNoHouse',
+        'test_onlyCreate3',
+        'test_createVsDetail',
+        'test_detailVsDatabase',
+        'test_replyDataValid',
+        'test_replyDataVsReply',
+        'test_reportValid',
+        'test_reportDataVsDatabase',
+        'test_duplicateReport',
+        'test_reportReply',
+        'test_reportReplyDataVsDatabase',
+        'test_duplicateReportReply',
+        'test_myReplyValid',
+        'test_replyParent',
+        'test_getRenterInfo',
+        'test_getRenterByErroNum',
+        'test_privateReply',
+        'test_privateReplyView',
+        'test_imgUpload',
+        'test_unImageUpload',
+        'test_likeList',
+        'test_likeAndViewList',
+        'test_cancelLikeAndViewList',
+        'test_anotherLike',
+        'test_anotherCancelLike',
+        'test_deletePost',
+        'test_deleteByNotOwner'
+    ]
+
+    suite = unittest.TestSuite(map(POSTTest, testList))
+    # runner = unittest.TextTestRunner(verbosity=2)
+    runner.run(suite)
+    fp.close()
